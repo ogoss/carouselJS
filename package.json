@@ -1,0 +1,16 @@
+{
+  "name": "carouselJS",
+  "version": "1.0.1",
+  "description": "custom carousel js",
+  "main": "./app/scripts/carousel.js",
+  "files": "./app/styles/carousel.css",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "browser-sync": "^2.18.5",
+    "gulp": "^3.9.1"
+  }
+}

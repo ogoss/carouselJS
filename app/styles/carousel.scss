@@ -1,0 +1,19 @@
+.carousel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  .list-wrap {
+    position: relative;
+    overflow: hidden;
+    .list {
+    	position: relative;
+      .item {
+        width: 100%;
+        img {
+          display: block;
+          width: 100%;
+        }
+      }
+    }
+  }
+}
