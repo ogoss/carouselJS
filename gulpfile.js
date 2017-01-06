@@ -11,7 +11,12 @@ var config = {
 
 gulp.task('browser-sync', function() {
   bs.init({
-    server: [config.tmp, config.src],
+    server: {
+      baseDir: [config.tmp, config.src],
+      routes: {
+        '/plugins': 'plugins'
+      }
+    },
     open: 'external'
   });
 });

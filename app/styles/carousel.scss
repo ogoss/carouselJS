@@ -5,15 +5,53 @@
   .list-wrap {
     position: relative;
     overflow: hidden;
+    width: 100%;
     .list {
-    	position: relative;
+      position: relative;
       .item {
+        float: left;
         width: 100%;
         img {
           display: block;
           width: 100%;
         }
       }
+    }
+  }
+  .list-nav {
+    text-align: center;
+    .prev,
+    .next {
+      font-size: 14px;
+      display: inline-block;
+      margin: 5px;
+      padding: 4px 7px;
+      cursor: pointer;
+      color: #fff;
+      border-radius: 3px;
+      background: #d6d6d6;
+    }
+    .prev:hover,
+    .next:hover {
+      background: #869791;
+    }
+  }
+  .list-dot {
+    text-align: center;
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin: 2px;
+      cursor: pointer;
+      border-radius: 10px;
+      background: #d6d6d6;
+    }
+    .dot:hover {
+      background: #869791;
+    }
+    .dot.active {
+      background: #869791;
     }
   }
 }
