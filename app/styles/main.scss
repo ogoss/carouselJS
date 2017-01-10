@@ -1,0 +1,42 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #4DC7A0;
+}
+
+.carousel-wrap {
+  width: 540px;
+  max-height: 304px;
+  margin: 0 auto;
+  overflow: hidden;
+  .list-wrap {
+    .carousel-item {
+      width: 100%;
+      img {
+        display: block;
+        width: 100%;
+      }
+    }
+  }
+  .list-nav {
+    .prev,
+    .next {
+      position: absolute;
+      top: 0;
+    }
+    .prev {
+      left: 10px;
+    }
+    .next {
+      right: 10px;
+    }
+  }
+  .list-dot {
+    position: absolute;
+    width: 100%;
+    bottom: 10px;
+  }
+}

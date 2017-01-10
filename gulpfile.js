@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var bs = require('browser-sync').create();
 var eslint = require('gulp-eslint');
 var sass = require('gulp-sass');
+var clean = require('gulp-clean');
 
 var config = {
   tmp: './.tmp/',
@@ -35,10 +36,15 @@ gulp.task('sass', function() {
     .pipe(bs.reload({ stream: true }));
 });
 
+gulp.task('clean', function() {
+  return gulp.src('./.tmp', { read: false })
+    .pipe(clean());
+});
+
 gulp.task('watch', ['browser-sync'], function() {
   gulp.watch(config.src + '**/*.js', ['eslint']);
   gulp.watch(config.src + '**/*.scss', ['sass']);
   gulp.watch([config.src + '*.html', config.src + 'images/']).on('change', bs.reload);
 });
 
-gulp.task('serve', ['watch']);
+gulp.task('serve', ['clean', 'sass', 'watch']);

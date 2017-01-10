@@ -16,21 +16,24 @@
 
   /* 配置属性 */
   var cfg = {
-    el: '.carousel',
-    item: 1
+    el: '.carousel'
   };
+  var itemShow = 1;
 
   /* 全局变量 */
   var carousel;
 
   var listWrap;
   var list;
-  var items; // 原始item
-  var itemsLen;
+
+  var total; // 所有item
+  var totalLen;
+  var origin; // 原始item
+  var originLen;
   var clones; // 克隆item
   var clonesLen;
+
   var width; // 单个item宽度
-  
   var position; // 当前位置
 
   var navWrap;
@@ -38,6 +41,7 @@
   var navNext;
 
   var dotWrap;
+  var animating; // 防止多次触发click事件
 
   function init(obj) {
     var i, len, child, childLen;
@@ -55,7 +59,7 @@
       child[i].className += ' item';
     }
 
-    for (i = 0, len = cfg.item; i < len; i++) {
+    for (i = 0, len = itemShow; i < len; i++) {
       prevFrag.appendChild(clone(child[childLen - len + i]));
       nextFrag.appendChild(clone(child[i]));
     }
@@ -63,44 +67,39 @@
     carousel.appendChild(nextFrag);
     carousel.insertBefore(prevFrag, carousel.firstChild);
 
-    // 获取items和clones
-    items = carousel.querySelectorAll('.item:not(.cloned)');
-    itemsLen = items.length;
+    // 获取total,origin和clones
+    total = carousel.querySelectorAll('.item');
+    totalLen = total.length;
+    origin = carousel.querySelectorAll('.item:not(.cloned)');
+    originLen = origin.length;
     clones = carousel.querySelectorAll('.cloned');
     clonesLen = clones.length;
 
-    // 添加外部wrap
     listWrap = append('div', carousel);
     listWrap.className = 'list-wrap';
     list = append('div', listWrap);
     list.className = 'list';
 
-    // items移动至外部wrap
-    for (i = 0; i < (itemsLen + clonesLen); i++) {
-      child[0].style.width = listWrap.offsetWidth / cfg.item + 'px';
-
-      list.appendChild(child[0]);
+    // item移动至list
+    for (i = 0; i < totalLen; i++) {
+      total[i].style.width = listWrap.offsetWidth / itemShow + 'px';
+      list.appendChild(total[i]);
     }
 
     // 初始化list宽度,位置
-    width = listWrap.offsetWidth / cfg.item;
-    list.style.width = width * (itemsLen + clonesLen) + 'px';
-    list.style.transform = 'translate3d(-' + width * clonesLen / 2 + 'px, 0px, 0px)';
-    list.style.transition = '0s';
+    position = 1;
+    width = listWrap.offsetWidth / itemShow;
+    list.style.width = width * (originLen + clonesLen) + 'px';
+    translate(0);
+
+    for (i = 0; i < itemShow; i++) {
+      origin[i].className += ' active';
+    }
 
     // 添加nav
     navWrap = append('div', carousel, '<div class="prev">prev</div><div class="next">next</div>');
     navWrap.className = 'list-nav';
-    navPrev = document.querySelector('.prev');
-    navNext = document.querySelector('.next');
-    navPrev.addEventListener('click', function(e) {
-      e.preventDefault();
-      toPrev();
-    }, false);
-    navNext.addEventListener('click', function(e) {
-      e.preventDefault();
-      toNext();
-    }, false);
+    onNavClick();
 
     // 添加dot 
     navWrap = append('div', carousel, '<span class="dot active"></span><span class="dot"></span><span class="dot"></span>');
@@ -146,14 +145,55 @@
     return node;
   }
 
+  function onNavClick() {
+    navPrev = document.querySelector('.prev');
+    navNext = document.querySelector('.next');
+    navPrev.addEventListener('click', function(e) {
+      e.preventDefault();
+      toPrev();
+    }, false);
+    navNext.addEventListener('click', function(e) {
+      e.preventDefault();
+      toNext();
+    }, false);
+  }
+
+  function onDotClick() {
+
+  }
+
+  function fixLoop() {
+    if (position === totalLen - 1) {
+      position = 1;
+      translate(0);
+    } else if (position === 0) {
+      position = totalLen - 2;
+      translate(0);
+    }
+    animating = false;
+  }
+
   function toNext() {
-    list.style.transform = 'translate3d(-' + width + 'px, 0px, 0px)';
-    list.style.transition = '0.25s';
+    if (!animating) {
+      position++;
+      translate(0.25);
+      setTimeout(fixLoop, 250);
+    }
+    animating = true;
   }
 
   function toPrev() {
-    list.style.transform = 'translate3d(' + width + 'px, 0px, 0px)';
-    list.style.transition = '0.25s';
+    if (!animating) {
+      position--;
+      translate(0.25);
+      setTimeout(fixLoop, 250);
+    }
+    animating = true;
+  }
+
+  function translate(t) {
+    list.style.transform = 'translate3d(-' + width * position * itemShow + 'px, 0px, 0px)';
+    list.style.transition = t + 's';
   }
 
   carousel.init = init;
