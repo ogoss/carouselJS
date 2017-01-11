@@ -16,8 +16,15 @@
 
   /* 配置属性 */
   var cfg = {
-    el: '.carousel'
+    el: '.carousel',
+    changeSpeed: 250,
+    auto: false,
+    durationSpeed: 2000,
+    nav: true,
+    navEl: '',
+    dot: true
   };
+
   var itemShow = 1;
 
   /* 全局变量 */
@@ -37,18 +44,26 @@
   var position; // 当前位置
 
   var navWrap;
-  var navPrev;
-  var navNext;
 
   var dotWrap;
+  var dot;
+
   var animating; // 防止多次触发click事件
 
-  function init(obj) {
-    var i, len, child, childLen;
+  var eventArrs = [
+    'onInit', 'onChange', 'onChanged'
+  ];
+
+  /**
+   * 初始化
+   * @param {Object} params 自定义参数
+   */
+  function init(params) {
+    var i, len, child, childLen, dotStr;
     var prevFrag = document.createDocumentFragment();
     var nextFrag = document.createDocumentFragment();
 
-    copy(cfg, obj);
+    copy(cfg, params);
 
     // 复制左右两边补足项
     carousel = document.querySelector(cfg.el);
@@ -90,20 +105,26 @@
     position = 1;
     width = listWrap.offsetWidth / itemShow;
     list.style.width = width * (originLen + clonesLen) + 'px';
-    translate(0);
+    toPosition(position, 0);
 
-    for (i = 0; i < itemShow; i++) {
-      origin[i].className += ' active';
-    }
+    // for (i = 0; i < itemShow; i++) {
+    //   origin[i].className += ' active';
+    // }
 
     // 添加nav
-    navWrap = append('div', carousel, '<div class="prev">prev</div><div class="next">next</div>');
-    navWrap.className = 'list-nav';
-    onNavClick();
+    if (cfg.nav) {
+      addNav();
+    }
 
     // 添加dot 
-    navWrap = append('div', carousel, '<span class="dot active"></span><span class="dot"></span><span class="dot"></span>');
-    navWrap.className = 'list-dot';
+    if (cfg.dot) {
+      dotWrap = append('div', carousel);
+      dotWrap.className = 'list-dot';
+      dot = dotWrap.children;
+      for (i = 0; i < originLen; i++) {
+        addDot();
+      }
+    }
   }
 
   /**
@@ -145,21 +166,37 @@
     return node;
   }
 
-  function onNavClick() {
-    navPrev = document.querySelector('.prev');
-    navNext = document.querySelector('.next');
-    navPrev.addEventListener('click', function(e) {
+  function addNav() {
+    navWrap = append('div', carousel, cfg.navEl || '<div class="prev">prev</div><div class="next">next</div>');
+    navWrap.className = 'list-nav';
+    document.querySelector('.prev').addEventListener('click', function(e) {
       e.preventDefault();
       toPrev();
     }, false);
-    navNext.addEventListener('click', function(e) {
+    document.querySelector('.next').addEventListener('click', function(e) {
       e.preventDefault();
       toNext();
     }, false);
   }
 
-  function onDotClick() {
+  function addDot() {
+    var current = append('span', dotWrap);
+    current.className += 'dot';
+    current.addEventListener('click', function(e) {
+      e.preventDefault();
+      toPosition(index(dot, current) + 1, cfg.changeSpeed);
+    }, false);
+  }
 
+  function index(elementObj, currentNode) {
+    var nodeList = Array.prototype.slice.call(elementObj);
+
+    return nodeList.indexOf(currentNode);
+  }
+
+  function translate(t) {
+    list.style.transform = 'translate3d(-' + width * position * itemShow + 'px, 0px, 0px)';
+    list.style.transition = t + 'ms';
   }
 
   function fixLoop() {
@@ -170,30 +207,44 @@
       position = totalLen - 2;
       translate(0);
     }
+
+    toggleClass();
+
     animating = false;
   }
 
   function toNext() {
     if (!animating) {
-      position++;
-      translate(0.25);
-      setTimeout(fixLoop, 250);
+      toPosition(++position, cfg.changeSpeed);
     }
     animating = true;
   }
 
   function toPrev() {
     if (!animating) {
-      position--;
-      translate(0.25);
-      setTimeout(fixLoop, 250);
+      toPosition(--position, cfg.changeSpeed);
     }
     animating = true;
   }
 
-  function translate(t) {
-    list.style.transform = 'translate3d(-' + width * position * itemShow + 'px, 0px, 0px)';
-    list.style.transition = t + 's';
+  function toPosition(index, t) {
+    position = index;
+    translate(t);
+    setTimeout(fixLoop, t);
+  }
+
+  function toggleClass() {
+    for (var i = 0, len = originLen; i < len; i++) {
+      if (cfg.dot) {
+        dot[i].classList.remove('active');
+      }
+      origin[i].classList.remove('active');
+    }
+
+    if (cfg.dot) {
+      dot[position - 1].className += ' active';
+    }
+    origin[position - 1].className += ' active';
   }
 
   carousel.init = init;

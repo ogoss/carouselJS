@@ -13,19 +13,28 @@
 <body>
   <div class="carousel-wrap carousel">
     <div class="carousel-item item1" id="11">
-      <img src="images/1.jpg?1" alt="" id="111">
+      <img src="images/1.jpg" alt="" id="111">
     </div>
     <div class="carousel-item item2" id="12">
-      <img src="images/2.jpg?2" alt="" id="112">
+      <img src="images/2.jpg" alt="" id="112">
     </div>
     <div class="carousel-item item3" id="13">
-      <img src="images/3.jpg?3" alt="" id="113">
+      <img src="images/1.jpg" alt="" id="113">
+    </div>
+    <div class="carousel-item item4" id="14">
+      <img src="images/3.jpg" alt="" id="114">
     </div>
   </div>
+  <div id="test"></div>
+  <button id="delete">delete</button>
+  <script src="plugins/jquery.min.js"></script>
   <script src="scripts/carousel.js"></script>
   <script>
   window.onload = function() {
     carousel.init();
+
+    document.querySelector('#delete').addEventListener('click', function() {
+    }, false);
   };
   </script>
 </body>
