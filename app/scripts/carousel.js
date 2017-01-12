@@ -16,21 +16,23 @@
 
   /* 配置属性 */
   var cfg = {
-    el: '.carousel',
-    changeSpeed: 250,
-    auto: false,
-    durationSpeed: 2000,
-    nav: true,
-    navEl: '',
-    dot: true
+    el: '.carousel', // 元素类名、id或标签名
+    speed: 250, // 滑动速度
+    auto: false, // 是否自动播放
+    duration: 3000, // 自动播放间隔
+    hoverPause: false, // 鼠标划入停止自动播放
+    nav: true, // 是否有nav按钮
+    navEl: '', // 自定义nav样式
+    dot: true, // 是否有dot按钮
+    drag: true // 是否可以拖拽
   };
 
   var itemShow = 1;
 
   /* 全局变量 */
-  var carousel;
+  var carouselWrap; // carousel外部wrap
 
-  var listWrap;
+  var listWrap; // list外部wrap
   var list;
 
   var total; // 所有item
@@ -43,12 +45,14 @@
   var width; // 单个item宽度
   var position; // 当前位置
 
-  var navWrap;
+  var navWrap; // nav外部wrap
 
-  var dotWrap;
-  var dot;
+  var dotWrap; // dot外部wrap
+  var dot; // 所有dot
 
   var animating; // 防止多次触发click事件
+  var hovered; // 鼠标是否移入
+  var autoTimer; // 自动滑动计时器
 
   var eventArrs = [
     'onInit', 'onChange', 'onChanged'
@@ -66,8 +70,8 @@
     copy(cfg, params);
 
     // 复制左右两边补足项
-    carousel = document.querySelector(cfg.el);
-    child = carousel.children;
+    carouselWrap = document.querySelector(cfg.el);
+    child = carouselWrap.children;
     childLen = child.length;
 
     for (i = 0, len = childLen; i < len; i++) {
@@ -79,18 +83,19 @@
       nextFrag.appendChild(clone(child[i]));
     }
 
-    carousel.appendChild(nextFrag);
-    carousel.insertBefore(prevFrag, carousel.firstChild);
+    carouselWrap.appendChild(nextFrag);
+    carouselWrap.insertBefore(prevFrag, carouselWrap.firstChild);
 
     // 获取total,origin和clones
-    total = carousel.querySelectorAll('.item');
+    total = carouselWrap.querySelectorAll('.item');
     totalLen = total.length;
-    origin = carousel.querySelectorAll('.item:not(.cloned)');
+    origin = carouselWrap.querySelectorAll('.item:not(.cloned)');
     originLen = origin.length;
-    clones = carousel.querySelectorAll('.cloned');
+    clones = carouselWrap.querySelectorAll('.cloned');
     clonesLen = clones.length;
 
-    listWrap = append('div', carousel);
+    // 添加list
+    listWrap = append('div', carouselWrap);
     listWrap.className = 'list-wrap';
     list = append('div', listWrap);
     list.className = 'list';
@@ -107,10 +112,6 @@
     list.style.width = width * (originLen + clonesLen) + 'px';
     toPosition(position, 0);
 
-    // for (i = 0; i < itemShow; i++) {
-    //   origin[i].className += ' active';
-    // }
-
     // 添加nav
     if (cfg.nav) {
       addNav();
@@ -118,11 +119,19 @@
 
     // 添加dot 
     if (cfg.dot) {
-      dotWrap = append('div', carousel);
+      dotWrap = append('div', carouselWrap);
       dotWrap.className = 'list-dot';
       dot = dotWrap.children;
       for (i = 0; i < originLen; i++) {
         addDot();
+      }
+    }
+
+    // 初始化自动播放
+    if (cfg.auto) {
+      autoPlay();
+      if (cfg.hoverPause) {
+        hoverToggleStatus();
       }
     }
   }
@@ -142,6 +151,13 @@
     }
   };
 
+  /**
+   * 添加元素
+   * @param {String} tagName 元素标签名
+   * @param {Element Object} parentNode 父元素对象
+   * @param {String} innerStr 内部内容
+   * @return {Element Object} 添加后的元素对象
+   */
   function append(tagName, parentNode, innerStr) {
     var node = document.createElement(tagName);
     if (innerStr) {
@@ -152,6 +168,11 @@
     return node;
   }
 
+  /**
+   * 克隆元素
+   * @param {Element Object} originNode 原始元素对象
+   * @return {Element Object} 克隆后的元素对象
+   */
   function clone(originNode) {
     var i, len, node, idNode;
     node = originNode.cloneNode(true);
@@ -166,8 +187,11 @@
     return node;
   }
 
+  /**
+   * 添加nav
+   */
   function addNav() {
-    navWrap = append('div', carousel, cfg.navEl || '<div class="prev">prev</div><div class="next">next</div>');
+    navWrap = append('div', carouselWrap, cfg.navEl || '<div class="prev">prev</div><div class="next">next</div>');
     navWrap.className = 'list-nav';
     document.querySelector('.prev').addEventListener('click', function(e) {
       e.preventDefault();
@@ -177,18 +201,29 @@
       e.preventDefault();
       toNext();
     }, false);
+
   }
 
+  /**
+   * 添加dot
+   */
   function addDot() {
     var current = append('span', dotWrap);
     current.className += 'dot';
     current.addEventListener('click', function(e) {
       e.preventDefault();
-      toPosition(index(dot, current) + 1, cfg.changeSpeed);
+
+      eventPlay(getIndex(dot, current) + 1);
     }, false);
   }
 
-  function index(elementObj, currentNode) {
+  /**
+   * 获取当前元素index
+   * @param {Element Object} elementObj  元素对象集合
+   * @param {Element Ojbect} currentNode 当前元素
+   * @return {Number} index
+   */
+  function getIndex(elementObj, currentNode) {
     var nodeList = Array.prototype.slice.call(elementObj);
 
     return nodeList.indexOf(currentNode);
@@ -199,6 +234,9 @@
     list.style.transition = t + 'ms';
   }
 
+  /**
+   * 循环轮播修复
+   */
   function fixLoop() {
     if (position === totalLen - 1) {
       position = 1;
@@ -213,26 +251,40 @@
     animating = false;
   }
 
-  function toNext() {
-    if (!animating) {
-      toPosition(++position, cfg.changeSpeed);
-    }
-    animating = true;
-  }
-
+  /**
+   * 滑动到前一个item
+   */
   function toPrev() {
     if (!animating) {
-      toPosition(--position, cfg.changeSpeed);
+      eventPlay(--position);
     }
     animating = true;
   }
 
+  /**
+   * 滑动到后一个item
+   */
+  function toNext() {
+    if (!animating) {
+      eventPlay(++position);
+    }
+    animating = true;
+  }
+
+  /**
+   * 滑动到特定index
+   * @param {Number} index 特定index
+   * @param {时间} t 滑动时间
+   */
   function toPosition(index, t) {
     position = index;
     translate(t);
     setTimeout(fixLoop, t);
   }
 
+  /**
+   * 设置当前item的class为acitve
+   */
   function toggleClass() {
     for (var i = 0, len = originLen; i < len; i++) {
       if (cfg.dot) {
@@ -245,6 +297,46 @@
       dot[position - 1].className += ' active';
     }
     origin[position - 1].className += ' active';
+  }
+
+  /**
+   * 自动滑动
+   */
+  function autoPlay() {
+    autoTimer = setInterval(play, cfg.duration);
+
+    function play() {
+      toPosition(++position, cfg.speed);
+    }
+  }
+
+  /**
+   * 事件触发滑动
+   * @param {Number} index 滑动到特定index
+   */
+  function eventPlay(index) {
+    if (cfg.auto) {
+      clearInterval(autoTimer);
+      if (!hovered) {
+        autoPlay();
+      }
+    }
+    toPosition(index, cfg.speed);
+  }
+
+  /**
+   * 鼠标移入移出切换自动播放状态
+   */
+  function hoverToggleStatus() {
+    carouselWrap.addEventListener('mouseenter', function() {
+      hovered = true;
+      clearInterval(autoTimer);
+    }, false);
+
+    carouselWrap.addEventListener('mouseleave', function() {
+      hovered = false;
+      autoPlay();
+    }, false);
   }
 
   carousel.init = init;
