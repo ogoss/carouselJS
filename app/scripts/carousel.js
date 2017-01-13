@@ -13,18 +13,18 @@
 }(this, function() {
 
   var carousel = {};
+  var MIN_SPEED = 250;
 
   /* 配置属性 */
   var cfg = {
     el: '.carousel', // 元素类名、id或标签名
-    speed: 250, // 滑动速度
+    speed: MIN_SPEED, // 滑动速度
     auto: false, // 是否自动播放
     duration: 3000, // 自动播放间隔
     hoverPause: false, // 鼠标划入停止自动播放
     nav: true, // 是否有nav按钮
     navEl: '', // 自定义nav样式
-    dot: true, // 是否有dot按钮
-    drag: true // 是否可以拖拽
+    dot: true // 是否有dot按钮
   };
 
   var itemShow = 1;
@@ -68,6 +68,13 @@
     var nextFrag = document.createDocumentFragment();
 
     copy(cfg, params);
+
+    if (cfg.speed < MIN_SPEED) {
+      fg.speed = MIN_SPEED;
+    }
+    if (cfg.duration <= cfg.speed) {
+      cfg.duration = cfg.speed + 500;
+    }
 
     // 复制左右两边补足项
     carouselWrap = document.querySelector(cfg.el);
@@ -201,7 +208,6 @@
       e.preventDefault();
       toNext();
     }, false);
-
   }
 
   /**

@@ -34,7 +34,9 @@
   window.onload = function() {
     carousel.init({
       auto: true,
-      hoverPause: true
+      duration: 1000,
+      hoverPause: true,
+      speed: 2000
     });
 
     document.querySelector('#delete').addEventListener('click', function() {
